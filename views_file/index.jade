@@ -1,0 +1,159 @@
+doctype html
+html
+
+    head
+
+        style(type='text/css').
+            .title{
+                background-color: #FFFFF0 ;
+                padding-top : 10px;
+                padding-bottom : 10px;
+                
+                text-align : center;
+            }
+
+            .container{
+                padding-top : 10px;
+                
+            }
+          
+            .file-buttons{
+                 margin-left : 50px;
+            }
+
+            .file-buttons button{
+                 margin-left : 5px;
+            }
+
+            .context{
+                padding : 20px;
+                padding-top : 40px;
+                text-align : center;
+                
+            }
+
+
+        script(src='https://code.jquery.com/jquery-3.4.1.js', integrity='sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=', crossorigin='anonymous')
+        script(src='https://unpkg.com/xlsx/dist/xlsx.full.min.js')
+        script(src='https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.0.2/papaparse.js') 
+        link(rel='stylesheet', href='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css', integrity='sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm', crossorigin='anonymous')
+
+
+        meta(charset='utf-8')
+
+        div.title
+             h1 File upload Page
+     
+    
+   
+    body
+
+
+        div.container
+           div.d-flex.justify-content-center
+                div.row
+                   form
+                       .custom-file
+                           input#uploadfile.custom-file-input(type='file')
+                           label.custom-file-label(for='uploadfile') Choose file
+
+                    div.file-buttons
+                         button#preview.btn.btn-outline-primary(type='button') Preview
+                         button#confirm.btn.btn-outline-primary(type='button') Comfirm
+
+        div.context
+            article
+                
+              
+        
+        
+        script.
+            $('#preview').on('click', preview)
+            $('#confirm').on('click', updateData)
+            $('#uploadfile').on('change', updatefilelabel)
+
+
+            function preview(){ 
+                var file = $('#uploadfile')[0].files[0]
+                
+                parsingCSVP(file).then((result)=> {
+                    var tablehtml = createTable(result)
+                    $('.context article').html(tablehtml)
+                })
+            }
+            // Promise 상용으로 동기식으로 처리 함 .. 
+            function parsingCSVP(file){
+                return new Promise( (resolve, reject) => {
+                    var reader = new FileReader()
+                    Papa.parse(file,{
+                        header:true,
+                        dynamicTyping: true,
+                        skipEmptyLines: true,
+                        complete: function(results){
+                            data = results["data"]
+                            resolve(data)
+                        }
+                    })
+                })
+                
+            }
+
+            function updatefilelabel(){
+                var file = $('#uploadfile')[0].files[0]
+                //alert(file.name)
+                $('.custom-file-label').text(file.name)
+            }
+
+            function createTable(data){
+                var result = `<table class="table">`;
+                
+                const thead = `<thead class="thead-dark">
+                                <tr>
+                                     <th scope="col">#</th>
+                                     <th scope="col">Model</th>
+                                     <th scope="col">suffix</th>
+                                     <th scope="col">item</th>
+                                     <th scope="col">value</th>
+                                </tr>
+                            </thead>`;
+                
+                 var tbody = `<tbody>`;
+                $.each(data, function(index, item){
+                       tbody = tbody + '<tr>'
+                       tbody = tbody + ' <th scope="row">' + (index+1) + '</th>'
+                       tbody = tbody + '<td>' + item.Model + '</td>'
+                       tbody = tbody + '<td>' + item.Suffix + '</td>'
+                       tbody = tbody + '<td>' + item.Item + '</td>'
+                       tbody = tbody + '<td>' + item.Value + '</td>'
+                       tbody = tbody + '</tr>'
+
+                })
+                tbody = tbody + '</tbody></table>'
+                result = result + thead + tbody
+
+                return result
+                
+            }
+
+            function updateData(){
+                var file = $('#uploadfile')[0].files[0]
+                parsingCSVP(file).then((result)=> {
+                    $.ajax({
+                        url:"/updatefile",
+                        type:'POST',
+                        data: {data:result},
+                        success: function(data){
+                            alert(data)
+                        },
+                        error: function(request, status, error){
+                            alert(error)
+                        }
+                    })
+                })
+               
+            }
+
+        
+
+
+
