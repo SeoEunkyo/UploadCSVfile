@@ -24,10 +24,32 @@ app.get('/',(req,res) => {
 app.post('/updatefile',(req,res) => {
     // DB에 업데이트 하면 된다 .. 
     const arrData = req.body.data
+    var updateList = {}
 
     arrData.forEach(element => {
-        console.log(element)
+        var modelsuffix = element.Model + '.' + element.Suffix
+        var updateItem = {'itemName' : element.Item , 'value' : element.Value}
+        //updateItem[element.Item] = element.Value
+
+        if(updateList.hasOwnProperty(modelsuffix)){
+            updateList[modelsuffix].push(updateItem)
+        }else{
+            var updateItemList = [updateItem]
+            updateList[modelsuffix] = updateItemList
+        }
+        
     });
+
+    for(var key in updateList){
+        console.log("key : " + key)
+        //console.log("vale :" + updateList[key])
+        updateList[key].forEach(element => {
+            console.log('itemName : ' + element['itemName'] + ', Value : ' + element['value'])
+        })
+    }
+
+
+
     res.end('OK')
 } )
 
